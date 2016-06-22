@@ -10,14 +10,17 @@ import helper.cloud_link_helper as CloudLinkHelper
 import helper.config_helper as ConfigHelper
 import helper.frontend_helper as FrontendHelper
 import helper.new_link_helper as NewLinkHelper
+import helper.acs_link_helper as AcsLinkHelper
 import helper.ssl_helper as SslHelper
 import helper.tcp_helper as TcpHelper
 import helper.update_helper as UpdateHelper
 from haproxy.config import *
 from haproxy.parser import LegacyLinkSpecs, NewLinkSpecs
 from utils import fetch_remote_obj, prettify, save_to_file, get_service_attribute, get_bind_string
+import registry
 
 logger = logging.getLogger("haproxy")
+logger.setLevel(logging.INFO)
 
 
 def run_haproxy(msg=None):
@@ -26,7 +29,7 @@ def run_haproxy(msg=None):
 
 
 class Haproxy(object):
-    cls_linked_services = set()
+    cls_linked_services = []
     cls_cfg = None
     cls_process = None
     cls_certs = []
@@ -43,7 +46,6 @@ class Haproxy(object):
         self.routes_added = []
         self.require_default_route = False
         self.specs = None
-        self.tcp_ports = set()
 
         self.specs = self._initialize(self.link_mode)
 
@@ -52,6 +54,12 @@ class Haproxy(object):
         if link_mode == "cloud":
             links = Haproxy._init_cloud_links()
             specs = NewLinkSpecs(links)
+        elif link_mode == "acs":
+            links = Haproxy._init_acs_links()
+            if links is None:
+                specs = LegacyLinkSpecs()
+            else:
+                specs = NewLinkSpecs(links)
         elif link_mode == "new":
             links = Haproxy._init_new_links()
             if links is None:
@@ -65,36 +73,62 @@ class Haproxy(object):
     @staticmethod
     def _init_cloud_links():
         haproxy_container = fetch_remote_obj(HAPROXY_CONTAINER_URI)
-        if haproxy_container:
-            links = CloudLinkHelper.get_cloud_links(haproxy_container)
-            Haproxy.cls_linked_services = CloudLinkHelper.get_linked_services(links)
-            logger.info("Linked service: %s", ", ".join(CloudLinkHelper.get_service_links_str(links)))
-            logger.info("Linked container: %s", ", ".join(CloudLinkHelper.get_container_links_str(links)))
-            return links
-        else:
-            return {}
+        links = CloudLinkHelper.get_cloud_links(haproxy_container)
+        Haproxy.cls_linked_services = CloudLinkHelper.get_linked_services(links)
+        logger.info("Linked service: %s", ", ".join(CloudLinkHelper.get_service_links_str(links)))
+        logger.info("Linked container: %s", ", ".join(CloudLinkHelper.get_container_links_str(links)))
+        return links
+
+    # fixme
+    @staticmethod
+    def _get_service_id(hostname, project_name):
+        sub_string = "-" + project_name + "-"
+        size = len(sub_string)
+        index = hostname.find(sub_string)
+        last_index = hostname.rfind("-")
+        service_name = hostname[index+size:last_index]
+        service_id = project_name + "_" + service_name
+        return service_id
+
+    @staticmethod
+    def _init_acs_links():
+        try:
+            hostname = os.environ.get("HOSTNAME", "")
+            project_name = os.environ.get("COMPOSE_PROJECT_NAME")
+            service_id = Haproxy._get_service_id(hostname, project_name)
+            service_url = registry.get_service_base_uri(service_id)
+            haproxy_service, _ = registry.get_service_info(service_url)
+            services, _ = registry.get_services_info()
+
+        except Exception as e:
+            logger.info("acs registry API error, regressing to legacy links mode: %s" % str(e))
+            return None
+        links, Haproxy.cls_linked_services = AcsLinkHelper.get_acs_links(services, haproxy_service, project_name)
+        logger.info("Linked service: %s", ", ".join(NewLinkHelper.get_service_links_str(links)))
+        logger.info("Linked container: %s", ", ".join(NewLinkHelper.get_container_links_str(links)))
+        logger.info("links %s" % links)
+        return links
 
     @staticmethod
     def _init_new_links():
         try:
-            try:
-                docker = docker_client()
-            except:
-                docker = docker_client(os.environ)
-
+            docker = docker_client()
             docker.ping()
             container_id = os.environ.get("HOSTNAME", "")
             haproxy_container = docker.inspect_container(container_id)
         except Exception as e:
-            logger.info("Docker API error, regressing to legacy links mode: %s" % e)
+            logger.info("Docker API error, regressing to legacy links mode: ", e)
             return None
         links, Haproxy.cls_linked_services = NewLinkHelper.get_new_links(docker, haproxy_container)
 
-        if ADDITIONAL_SERVICES:
-            additional_links, additional_services= NewLinkHelper.get_additional_links(docker, ADDITIONAL_SERVICES)
-            if additional_links and additional_services:
-                links.update(additional_links)
-                Haproxy.cls_linked_services.update(additional_services)
+        try:
+            if ADDITIONAL_SERVICES:
+                additional_services = ADDITIONAL_SERVICES.split(",")
+                NewLinkHelper.get_additional_links(docker, additional_services, haproxy_container,
+                                                   links, Haproxy.cls_linked_services)
+        except Exception as e:
+            logger.info("Error loading ADDITIONAL_SERVICES: %s" % str(e))
+            return None
 
         logger.info("Linked service: %s", ", ".join(NewLinkHelper.get_service_links_str(links)))
         logger.info("Linked container: %s", ", ".join(NewLinkHelper.get_container_links_str(links)))
@@ -118,7 +152,7 @@ class Haproxy(object):
             logger.info("Internal error: Specs is not initialized")
 
     def _update_haproxy(self, cfg):
-        if self.link_mode in ["cloud", "new"]:
+        if self.link_mode in ["cloud", "new", "acs"]:
             if Haproxy.cls_cfg != cfg:
                 logger.info("HAProxy configuration:\n%s" % cfg)
                 Haproxy.cls_cfg = cfg
@@ -260,12 +294,11 @@ class Haproxy(object):
         tcp_ports = TcpHelper.get_tcp_port_list(details, services_aliases)
 
         for tcp_port in set(tcp_ports):
-            tcp_section, port_num = self._get_tcp_section(details, services_aliases, tcp_port)
-            self.tcp_ports.add(port_num)
+            tcp_section, port_num = self.get_tcp_section(details, services_aliases, tcp_port)
             cfg["listen port_%s" % port_num] = tcp_section
         return cfg
 
-    def _get_tcp_section(self, details, services_aliases, tcp_port):
+    def get_tcp_section(self, details, services_aliases, tcp_port):
         tcp_section = []
         enable_ssl, port_num = TcpHelper.parse_port_string(tcp_port, self.ssl_bind_string)
         bind_string = get_bind_string(enable_ssl, port_num, self.ssl_bind_string, EXTRA_BIND_SETTINGS)
@@ -290,11 +323,6 @@ class Haproxy(object):
         monitor_uri_configured = False
         if vhosts:
             cfg, monitor_uri_configured = FrontendHelper.config_frontend_with_virtual_host(vhosts, ssl_bind_string)
-            for port in self.tcp_ports:
-                port_str = "frontend port_%s" % port
-                if port_str in cfg:
-                    del cfg[port_str]
-
         else:
             self.require_default_route = FrontendHelper.check_require_default_route(self.specs.get_routes(),
                                                                                     self.routes_added)
@@ -320,12 +348,13 @@ class Haproxy(object):
         for service_alias in services_aliases:
             backend = BackendHelper.get_backend_section(details, routes, vhosts, service_alias, self.routes_added)
 
-            if not service_alias:
-                if self.require_default_route:
-                    cfg["backend default_service"] = backend
-            else:
-                if get_service_attribute(details, "virtual_host", service_alias):
-                    cfg["backend SERVICE_%s" % service_alias] = backend
+            if BackendHelper.check_backend_has_routes(backend):
+                if not service_alias:
+                    if self.require_default_route:
+                        cfg["backend default_service"] = backend
                 else:
-                    cfg["backend default_service"] = backend
+                    if get_service_attribute(details, "virtual_host", service_alias):
+                        cfg["backend SERVICE_%s" % service_alias] = backend
+                    else:
+                        cfg["backend default_service"] = backend
         return cfg

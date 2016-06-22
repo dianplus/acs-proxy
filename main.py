@@ -61,11 +61,10 @@ def check_link_mode(container_uri, service_uri, api_auth):
                             " give an API role to this service for automatic backend reconfiguration" % __version__)
         return "cloud"
     # no api_auth will be "acs link mode"
-    elif: container_uri and service_uri
+    elif container_uri and service_uri:
         logger.info("acs link mode")
         return "acs"
     else:
-
         link_mode = "new"
         reason = ""
         try:

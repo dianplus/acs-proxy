@@ -1,8 +1,6 @@
 import json
 import logging
-import time
-import os
-
+import registry
 import dockercloud
 from compose.cli.docker_client import docker_client
 from docker.errors import APIError
@@ -27,7 +25,7 @@ def on_cloud_event(message):
     # When service scale up/down or container start/stop/terminate/redeploy, reload the service
     if event.get("state", "") not in ["In progress", "Pending", "Terminating", "Starting", "Scaling", "Stopping"] and \
                     event.get("type", "").lower() in ["container", "service"] and \
-                    len(Haproxy.cls_linked_services.intersection(set(event.get("parents", [])))) > 0:
+                    len(set(Haproxy.cls_linked_services).intersection(set(event.get("parents", [])))) > 0:
         msg = "Docker Cloud Event: %s %s is %s" % (
             event["type"], get_uuid_from_resource_uri(event.get("resource_uri", "")), event["state"].lower())
         run_haproxy(msg)
@@ -54,33 +52,29 @@ def on_user_reload(signum, frame):
         run_haproxy("User reload")
 
 
-def on_cloud_error(e):
-    if isinstance(e, KeyboardInterrupt):
-        exit(0)
-
-
 def listen_dockercloud_events():
     events = dockercloud.Events()
     events.on_open(on_websocket_open)
     events.on_close(on_websocket_close)
     events.on_message(on_cloud_event)
-    events.on_error(on_cloud_error)
-    while True:
-        try:
-            events.run_forever()
-        except dockercloud.AuthError as e:
-            logger.info("Auth error: %s, retry in 1 hour" % e)
-            time.sleep(3600)
+    events.run_forever()
+
+
+def on_acs_event(msg):
+    logger.debug(msg)
+    logger.debug("on acs event, reload the haproxy")
+    run_haproxy("ACS Event")
+
+
+def listen_acs_events():
+    events = registry.Events()
+    events.on_message(on_acs_event)
+    events.run_forever()
 
 
 def listen_docker_events():
     try:
-
-        try:
-            docker = docker_client()
-        except:
-            docker = docker_client(os.environ)
-
+        docker = docker_client()
         docker.ping()
         for event in docker.events(decode=True):
             logger.debug(event)

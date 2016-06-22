@@ -13,9 +13,6 @@ from utils import get_uuid_from_resource_uri
 logger = logging.getLogger("haproxy")
 
 
-
-
-
 def on_cloud_event(message):
     logger.debug(message)
     logger.debug(Haproxy.cls_linked_services)
@@ -61,6 +58,7 @@ def listen_dockercloud_events():
     events.on_close(on_websocket_close)
     events.on_message(on_cloud_event)
     events.run_forever()
+
 
 def on_acs_event(msg):
     logger.debug(msg)

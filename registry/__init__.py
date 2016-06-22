@@ -1,2 +1,2 @@
-from etcd import *
+from etcd_info import *
 from events import *

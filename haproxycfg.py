@@ -93,16 +93,6 @@ class Haproxy(object):
             logger.info("acs registry API error, regressing to legacy links mode: ", e)
             return None
         links, Haproxy.cls_linked_services = AcsLinkHelper.get_acs_links(services, haproxy_service, project_name)
-
-        try:
-            if ADDITIONAL_SERVICES:
-                additional_services = ADDITIONAL_SERVICES.split(",")
-                NewLinkHelper.get_additional_links(docker, additional_services, haproxy_container,
-                                                   links, Haproxy.cls_linked_services)
-        except Exception as e:
-            logger.info("Error loading ADDITIONAL_SERVICES: %s" % str(e))
-            return None
-
         logger.info("Linked service: %s", ", ".join(NewLinkHelper.get_service_links_str(links)))
         logger.info("Linked container: %s", ", ".join(NewLinkHelper.get_container_links_str(links)))
         return links
