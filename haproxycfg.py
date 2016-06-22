@@ -20,6 +20,7 @@ from utils import fetch_remote_obj, prettify, save_to_file, get_service_attribut
 import registry
 
 logger = logging.getLogger("haproxy")
+logger.setLevel(logging.INFO)
 
 
 def run_haproxy(msg=None):
@@ -55,7 +56,10 @@ class Haproxy(object):
             specs = NewLinkSpecs(links)
         elif link_mode == "acs":
             links = Haproxy._init_acs_links()
-            specs = NewLinkSpecs(links)
+            if links is None:
+                specs = LegacyLinkSpecs()
+            else:
+                specs = NewLinkSpecs(links)
         elif link_mode == "new":
             links = Haproxy._init_new_links()
             if links is None:
@@ -75,26 +79,34 @@ class Haproxy(object):
         logger.info("Linked container: %s", ", ".join(CloudLinkHelper.get_container_links_str(links)))
         return links
 
+    # fixme
+    @staticmethod
+    def _get_service_id(hostname, project_name):
+        sub_string = "-" + project_name + "-"
+        size = len(sub_string)
+        index = hostname.find(sub_string)
+        last_index = hostname.rfind("-")
+        service_name = hostname[index+size:last_index]
+        service_id = project_name + "_" + service_name
+        return service_id
+
     @staticmethod
     def _init_acs_links():
         try:
             hostname = os.environ.get("HOSTNAME", "")
             project_name = os.environ.get("COMPOSE_PROJECT_NAME")
-            sub_string = "-" + project_name +"-"
-            size = len(sub_string)
-            index = hostname.find(sub_string)
-            last_index = hostname.rfind("-")
-            service_name = hostname[index+size, last_index]
-            service_id = project_name + "_" + service_name
-            haproxy_service = registry.get_service_info(service_id)
-            services = registry.get_services_info()
+            service_id = Haproxy._get_service_id(hostname, project_name)
+            service_url = registry.get_service_base_uri(service_id)
+            haproxy_service, _ = registry.get_service_info(service_url)
+            services, _ = registry.get_services_info()
 
         except Exception as e:
-            logger.info("acs registry API error, regressing to legacy links mode: ", e)
+            logger.info("acs registry API error, regressing to legacy links mode: %s" % str(e))
             return None
         links, Haproxy.cls_linked_services = AcsLinkHelper.get_acs_links(services, haproxy_service, project_name)
         logger.info("Linked service: %s", ", ".join(NewLinkHelper.get_service_links_str(links)))
         logger.info("Linked container: %s", ", ".join(NewLinkHelper.get_container_links_str(links)))
+        logger.info("links %s" % links)
         return links
 
     @staticmethod
@@ -140,7 +152,7 @@ class Haproxy(object):
             logger.info("Internal error: Specs is not initialized")
 
     def _update_haproxy(self, cfg):
-        if self.link_mode in ["cloud", "new"]:
+        if self.link_mode in ["cloud", "new", "acs"]:
             if Haproxy.cls_cfg != cfg:
                 logger.info("HAProxy configuration:\n%s" % cfg)
                 Haproxy.cls_cfg = cfg

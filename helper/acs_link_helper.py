@@ -9,29 +9,41 @@ def get_acs_links(services, haproxy_service, project_name):
     links = {}
     linked_compose_services = []
     for service in services:
-        for _container in service.containers:
-            container_id = _container.id
+        if service.info:
             compose_labels = service.info.get("definition", {}).get("labels", {})
             compose_project = compose_labels.get("com.docker.compose.project", "")
             compose_service = compose_labels.get("com.docker.compose.service", "")
-            if compose_project == project_name:
-                linked_compose_services.append(service.info.get("name"))
-                service_name = "%s_%s" % (compose_project, compose_service)
-                container_name = _container.get("name").lstrip("/")
-                container_evvvars = _get_container_envvars(compose_labels)
-                endpoints = _get_container_endpoints(_container, container_name, service.info)
-                links[container_id] = {"service_name": service_name,
-                                       "container_envvars": container_evvvars,
-                                       "container_name": container_name,
-                                       "endpoints": endpoints,
-                                       "compose_service": compose_service,
-                                       "compose_project": compose_project}
+            linked_compose_services.append(service.info.get("name"))
+            service_name = "%s_%s" % (compose_project, compose_service)
+            for _container in service.containers:
+                if compose_project == project_name:
+                    container_id = _container["id"]
+                    container_name = _container.get("name").lstrip("/")
+                    container_evvvars = _get_container_envvars(compose_labels)
+                    endpoints = _get_container_endpoints(_container, container_name, service.info)
+                    if len(endpoints) > 0:
+                        links[container_id] = {"service_name": service_name,
+                                               "container_envvars": container_evvvars,
+                                               "container_name": container_name,
+                                               "endpoints": endpoints,
+                                               "compose_service": compose_service,
+                                               "compose_project": compose_project}
     return links, ["%s_%s" % (project_name, service) for service in linked_compose_services]
 
 
 def _get_container_endpoints(container, container_name, info):
+    logger.info("container: %s" % container)
+    logger.info("info: %s" % info)
     endpoints = {}
-    for k in info.get("definition", {}).get("ports", []):
+    port_list = info.get("container_config", {}).get("ExposedPorts", [])
+    if not port_list:
+        port_list = []
+    logger.info(port_list)
+    service_port_list = info.get("definition", {}).get("ports", [])
+    logger.info(service_port_list)
+    if len(service_port_list) > 0:
+        port_list = service_port_list
+    for k in port_list:
         terms = k.split("/", 1)
         port = terms[0]
         if len(terms) == 2:
@@ -48,7 +60,8 @@ def _get_container_envvars(compose_labels):
     container_evvvars = []
     for k, v in compose_labels.iteritems():
         if k.startswith("aliyun.proxy."):
-            container_evvvar = {"key": k[len("aliyun.proxy."):]}
+            container_evvvar = dict()
+            container_evvvar["key"] = k[len("aliyun.proxy."):]
             container_evvvar["value"] = v
             container_evvvars.append(container_evvvar)
     return container_evvvars
