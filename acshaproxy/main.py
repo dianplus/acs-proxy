@@ -42,6 +42,7 @@ def listen_acs_events():
 def main():
     logging.basicConfig(stream=sys.stdout)
     logging.getLogger("haproxy").setLevel(logging.DEBUG if config.DEBUG else logging.INFO)
+    logger.info("starting image registry.aliyuncs.com/acs/proxy:%s ..." % config.IMAGE_VERSION)
     if config.DEBUG:
         logging.getLogger("python-dockercloud").setLevel(logging.DEBUG)
 
