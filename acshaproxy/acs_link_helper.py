@@ -3,7 +3,7 @@ import logging
 logger = logging.getLogger("haproxy")
 
 
-def get_acs_links(services, haproxy_service, service_filter):
+def get_acs_links(services, service_filter):
     links = {}
     linked_compose_services = []
     for service in services:

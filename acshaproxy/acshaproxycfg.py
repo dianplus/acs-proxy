@@ -59,21 +59,15 @@ class AcsHaproxy(Haproxy):
     @staticmethod
     def _init_acs_links():
         try:
-            hostname = os.environ.get("HOSTNAME", "")
             project_name = os.environ.get("COMPOSE_PROJECT_NAME")
-            service_id = AcsHaproxy._get_service_id(hostname, project_name)
-            logger.debug("service_id %s" % service_id)
             etcd_client = registry.get_etcd_client()
-            service_url = registry.get_service_base_uri(service_id)
-            haproxy_service, _ = registry.get_service_info(etcd_client, service_url)
-            logger.debug("haproxy_service %s" % haproxy_service)
             services, _ = registry.get_services_info(etcd_client)
             logger.debug("services %s" % services)
             service_filter = AcsHaproxy._get_service_filter(project_name)
         except Exception as e:
             logger.info("acs registry API error, regressing to legacy links mode: %s" % str(e))
             return None
-        links, Haproxy.cls_linked_services = AcsLinkHelper.get_acs_links(services, haproxy_service, service_filter)
+        links, Haproxy.cls_linked_services = AcsLinkHelper.get_acs_links(services, service_filter)
         logger.debug("Linked service: %s", ", ".join(NewLinkHelper.get_service_links_str(links)))
         logger.debug("Linked container: %s", ", ".join(NewLinkHelper.get_container_links_str(links)))
         logger.debug("links %s" % links)
