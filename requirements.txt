@@ -1,2 +1,2 @@
-dockercloud-haproxy==1.5.1
+dockercloud-haproxy==1.4.1
 gevent==1.1.1
