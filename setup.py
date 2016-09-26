@@ -5,7 +5,7 @@ import re
 from setuptools import setup, find_packages
 
 requirements = [
-    "dockercloud-haproxy >= 1.5.1"
+    "dockercloud-haproxy >= 1.4.1"
     ]
 
 

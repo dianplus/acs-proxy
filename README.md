@@ -82,7 +82,7 @@ Settings in this part is immutable, you have to redeploy HAProxy service to make
 |DEFAULT_SSL_CERT| |Default ssl cert, a pem file content with private key followed by public certificate, '\n'(two chars) as the line separator. should be formatted as one line - see [SSL Termination](#ssl-termination)|
 |EXTRA_BIND_SETTINGS| |comma-separated string(`<port>:<setting>`) of extra settings, and each part will be appended to the related port bind section in the configuration file. To escape comma, use `\,`. Possible value: `443:accept-proxy, 80:name http`|
 |EXTRA_DEFAULT_SETTINGS| |comma-separated string of extra settings, and each part will be appended to DEFAULT section in the configuration file. To escape comma, use `\,`|
-|EXTRA_FRONTEND\_SETTINGS\_&lt;PORT&gt;| |comma-separated string of extra settings, and each part will be appended frontend section with the port number specified in the name of the envvar. To escape comma, use `\,`. E.g. `EXTRA_FRONTEND_SETTINGS_80=balance source, maxconn 2000`|
+|EXTRA\_FRONTEND\_SETTINGS\_&lt;PORT&gt;| |comma-separated string of extra settings, and each part will be appended frontend section with the port number specified in the name of the envvar. To escape comma, use `\,`. E.g. `EXTRA_FRONTEND_SETTINGS_80=balance source, maxconn 2000`|
 |EXTRA_GLOBAL_SETTINGS| |comma-separated string of extra settings, and each part will be appended to GLOBAL section in the configuration file. To escape comma, use `\,`. Possible value: `tune.ssl.cachesize 20000, tune.ssl.default-dh-param 2048`|
 |EXTRA_ROUTE_SETTINGS| |a string which is append to the each backend route after the health check, can be over written in the linked services. Possible value: "send-proxy"|
 |EXTRA_SSL_CERTS| |list of extra certificate names separated by comma, eg. `CERT1, CERT2, CERT3`. You also need to specify each certificate as separate env variables like so: `CERT1="<cert-body1>"`, `CERT2="<cert-body2>"`, `CERT3="<cert-body3>"`|
@@ -361,7 +361,7 @@ Replace `<subdomain>` and `<port>` with your the values matching your papertrail
                                                                |---- container_a1
                                         |----- service_a ----- |---- container_a2
                                         |   (virtual host a)   |---- container_a3
-    internet --- SLB -- acs/proxy--- |
+    internet --- SLB ----- acs/proxy--- |
                                         |                      |---- container_b1
                                         |----- service_b ----- |---- container_b2
                                             (virtual host b)   |---- container_b3
