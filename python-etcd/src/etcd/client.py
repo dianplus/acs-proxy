@@ -160,7 +160,7 @@ class Client(object):
             # If we don't allow TLSv1, clients using older version of OpenSSL
             # (<1.0) won't be able to connect.
             _log.debug("HTTPS enabled.")
-            kw['ssl_version'] = ssl.PROTOCOL_TLSv1
+            kw['ssl_version'] = ssl.PROTOCOL_TLSv1_2
 
         if cert:
             if isinstance(cert, tuple):
