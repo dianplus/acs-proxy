@@ -39,13 +39,13 @@ def _get_container_endpoints(container, container_name, info):
     if not port_list:
         port_list = []
     logger.debug(port_list)
-    service_expose_map = info.get("definition", {}).get("expose", [])
-    logger.debug(service_expose_map)
-    service_port_map = info.get("definition", {}).get("ports", [])
-    logger.debug(service_port_map)
-    service_port_map = service_expose_map + service_port_map
+    service_expose_list = info.get("definition", {}).get("expose", [])
+    logger.debug(service_expose_list)
+    service_port_map_list = info.get("definition", {}).get("ports", [])
+    logger.debug(service_port_map_list)
+    service_port_map_list = service_expose_list + service_port_map_list
     service_port_list = []
-    for port in service_port_map:
+    for port in service_port_map_list:
         iterms = port.split(":", 1)
         if len(iterms) == 2:
             service_port_list.append(iterms[1])
