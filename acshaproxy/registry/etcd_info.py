@@ -35,13 +35,19 @@ def get_etcd_client(read_timeout=60):
     if not config.ETCD_NODES or not config.CLUSTER_ID:
         logger.error("Environment variables ETCD_NODES or CLUSTER_ID are not set, aborting...")
         raise Exception("Environment variables ETCD_NODES or CLUSTER_ID are not set, aborting...")
-    else :
-        index = config.ETCD_NODES.index(':')
-        host = config.ETCD_NODES[0:index]
-        port = int(config.ETCD_NODES[index + 1:])
+    else:
+        hosts_info = config.ETCD_NODES.split(",")
+        host = ()
+        for hostInfo in hosts_info:
+            index = hostInfo.index(':')
+            host_domain = hostInfo[0:index].strip()
+            host_port = int(hostInfo[index + 1:].strip())
+            host_pair = (host_domain, host_port)
+            host = host + (host_pair,)
+
         set_cluster_id(config.CLUSTER_ID)
-        etcd_client = _get_etcd_client(host, port, (config.TLS_CERTFILE, config.TLS_KEYFILE),
-                                                config.TLS_CACERTFILE, read_timeout)
+        etcd_client = _get_etcd_client(host, None, (config.TLS_CERTFILE, config.TLS_KEYFILE),
+                                       config.TLS_CACERTFILE, read_timeout)
         return etcd_client
 
 
