@@ -13,8 +13,8 @@ function cleanup() {
 trap cleanup  EXIT
 sed -i.bak "s/HEAD/$IMAGE_VERSION/g" ./acshaproxy/config.py
 
-docker build -t registry.aliyuncs.com/acs-access/proxy:$VERSION .
-docker tag registry.aliyuncs.com/acs-access/proxy:$VERSION registry.aliyuncs.com/acs-access/proxy:$VERSION-$GIT_SHA 
-docker push registry.aliyuncs.com/acs-access/proxy:$VERSION
-docker push registry.aliyuncs.com/acs-access/proxy:$VERSION-$GIT_SHA
+docker build -t registry.aliyuncs.com/acs-sample/proxy:$VERSION .
+docker tag registry.aliyuncs.com/acs-sample/proxy:$VERSION registry.aliyuncs.com/acs-sample/proxy:$VERSION-$GIT_SHA 
+docker push registry.aliyuncs.com/acs-sample/proxy:$VERSION
+docker push registry.aliyuncs.com/acs-sample/proxy:$VERSION-$GIT_SHA
 
