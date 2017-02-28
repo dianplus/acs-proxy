@@ -1,3 +1,6 @@
+from gevent import monkey
+monkey.patch_all()
+
 import logging
 import os
 import signal
@@ -11,9 +14,6 @@ from haproxy import __version__
 from acshaproxycfg import run_haproxy
 from haproxy.utils import save_to_file
 
-
-from gevent import monkey
-monkey.patch_all()
 
 # do monkey patch before import urllib3
 import registry
