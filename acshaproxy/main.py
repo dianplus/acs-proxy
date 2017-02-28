@@ -1,8 +1,10 @@
+from gevent import monkey
+monkey.patch_all()
+
 import logging
 import os
 import signal
 import sys
-import registry
 
 import dockercloud
 
@@ -13,8 +15,8 @@ from acshaproxycfg import run_haproxy
 from haproxy.utils import save_to_file
 
 
-from gevent import monkey
-monkey.patch_all()
+# do monkey patch before import urllib3
+import registry
 
 dockercloud.user_agent = "dockercloud-haproxy/%s" % __version__
 

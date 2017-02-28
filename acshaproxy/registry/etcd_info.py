@@ -126,11 +126,11 @@ def watch_prefix(etcd_client, uri, wait_index):
     logger.debug("wait_index %s" % wait_index)
     try:
         if wait_index == 0:
-            result = etcd_client.read(uri, recursive=True)
+            result = etcd_client.read(uri, recursive=True, timeout=600)
             wait_index = result.etcd_index
             return result, wait_index + 1
         else:
-            result = etcd_client.read(uri, wait=True, recursive=True, waitIndex=wait_index)
+            result = etcd_client.read(uri, wait=True, recursive=True, waitIndex=wait_index, timeout=600)
             wait_index = result.modifiedIndex
             return result, wait_index + 1
     except etcd.EtcdKeyNotFound as e:
@@ -147,7 +147,7 @@ def watch_prefix(etcd_client, uri, wait_index):
         return None, 0
     except:
         logger.error("Unexpected error: %s" % sys.exc_info()[0])
-        raise
+        return None, 0
 
 
 def list_services_status():
