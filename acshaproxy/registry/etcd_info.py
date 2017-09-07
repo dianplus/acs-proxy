@@ -1,8 +1,10 @@
-import etcd
-import logging
 import json
-import sys
+import logging
 import os
+import sys
+
+import etcd
+
 import acshaproxy.config as config
 
 logger = logging.getLogger("haproxy")

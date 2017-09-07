@@ -1,14 +1,16 @@
-from haproxy.haproxycfg import Haproxy
-import config
 import logging
-import registry
 import os
-import haproxy.helper.update_helper as UpdateHelper
-import acs_link_helper as AcsLinkHelper
+
 import haproxy.helper.new_link_helper as NewLinkHelper
-from haproxy.parser.new_link_parser import NewLinkSpecs
-from haproxy.parser.legacy_link_parser import LegacyLinkSpecs
+import haproxy.helper.update_helper as UpdateHelper
+from haproxy.haproxycfg import Haproxy
+from haproxy.parser.legacy_parser import LegacySpecs
+from haproxy.parser.new_parser import NewSpecs
 from haproxy.utils import save_to_file
+
+import acs_link_helper as AcsLinkHelper
+import config
+import registry
 
 logger = logging.getLogger("haproxy")
 
@@ -21,6 +23,7 @@ def run_haproxy(msg=None):
 
 class AcsHaproxy(Haproxy):
     """extend Haproxy"""
+
     def __init__(self, link_mode="", msg=""):
         super(AcsHaproxy, self).__init__(link_mode, msg)
         self.specs = self._initialize(self.link_mode)
@@ -30,11 +33,11 @@ class AcsHaproxy(Haproxy):
         if link_mode == "acs":
             links = AcsHaproxy._init_acs_links()
             if links is None:
-                specs = LegacyLinkSpecs()
+                specs = LegacySpecs()
             else:
-                specs = NewLinkSpecs(links)
+                specs = NewSpecs(links)
         else:
-            specs = LegacyLinkSpecs()
+            specs = LegacySpecs()
         return specs
 
     @staticmethod
@@ -43,7 +46,7 @@ class AcsHaproxy(Haproxy):
         size = len(sub_string)
         index = hostname.find(sub_string)
         last_index = hostname.rfind("-")
-        service_name = hostname[index+size:last_index]
+        service_name = hostname[index + size:last_index]
         service_id = project_name + "_" + service_name
         return service_id
 
@@ -52,7 +55,8 @@ class AcsHaproxy(Haproxy):
         if config.ADDITIONAL_SERVICES == "*":
             return lambda project, service: True
         elif config.ADDITIONAL_SERVICES:
-            return lambda project, service: (project + ":" + service) in (config.ADDITIONAL_SERVICES.split(",")) or project == project_name
+            return lambda project, service: (project + ":" + service) in (
+                config.ADDITIONAL_SERVICES.split(",")) or project == project_name
         else:
             return lambda project, service: project == project_name
 

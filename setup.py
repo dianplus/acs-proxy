@@ -5,8 +5,9 @@ import re
 from setuptools import setup, find_packages
 
 requirements = [
-    "dockercloud-haproxy >= 1.4.1"
-    ]
+    "dockercloud-haproxy >= 1.6.7",
+    "gevent==1.1.1"
+]
 
 
 def read(*parts):
@@ -23,6 +24,7 @@ def find_version(*file_paths):
         return version_match.group(1)
     raise RuntimeError('Unable to find version string.')
 
+
 setup(
     name='acs-haproxy',
     version=find_version('acshaproxy', '__init__.py'),
@@ -33,8 +35,8 @@ setup(
             ['acs-haproxy = acshaproxy.main:main']
     },
     include_package_data=True,
-    author='linhua.tlh',
-    author_email='linhua.tlh@alibaba-inc.com',
+    author='quanzhao.cqz',
+    author_email='quanzhao.cqz@alibaba-inc.com',
     description='acs haproxy configured for aliyun container services',
     license='Apache v2',
     keywords='aliyun container service haproxy',

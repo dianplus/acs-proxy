@@ -1,6 +1,6 @@
 import json
-
 import logging
+
 import etcd
 
 _log = logging.getLogger(__name__)
@@ -146,7 +146,6 @@ class EtcdUser(EtcdAuthBase):
         return json.dumps(self._to_net()[0])
 
 
-
 class EtcdRole(EtcdAuthBase):
     entity = 'role'
 
@@ -175,13 +174,13 @@ class EtcdRole(EtcdAuthBase):
             retval.append({
                 "role": self.name,
                 "permissions":
-                {
-                    "kv":
                     {
-                        "read": list(self._read_paths),
-                        "write": list(self._write_paths)
+                        "kv":
+                            {
+                                "read": list(self._read_paths),
+                                "write": list(self._write_paths)
+                            }
                     }
-                }
             })
         else:
             to_grant = {
@@ -206,10 +205,10 @@ class EtcdRole(EtcdAuthBase):
 
     def revoke(self, path, permission):
         if permission.upper().find('R') >= 0 and \
-           path in self._read_paths:
+                        path in self._read_paths:
             self._read_paths.remove(path)
         if permission.upper().find('W') >= 0 and \
-           path in self._write_paths:
+                        path in self._write_paths:
             self._write_paths.remove(path)
 
     @property

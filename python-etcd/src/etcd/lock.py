@@ -1,8 +1,10 @@
 import logging
-import etcd
 import uuid
 
+import etcd
+
 _log = logging.getLogger(__name__)
+
 
 class Lock(object):
     """
@@ -167,8 +169,8 @@ class Lock(object):
                 _log.debug("No key before our one, we are the locker")
                 return (l[0], None)
             else:
-                _log.debug("Locker: %s, key to watch: %s", l[0], l[i-1])
-                return (l[0], l[i-1])
+                _log.debug("Locker: %s, key to watch: %s", l[0], l[i - 1])
+                return (l[0], l[i - 1])
         except ValueError:
             # Something very wrong is going on, most probably
             # our lock has expired

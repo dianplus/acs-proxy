@@ -7,6 +7,7 @@
 
 """
 import logging
+
 try:
     # Python 3
     from http.client import HTTPException
@@ -27,12 +28,10 @@ try:
 except ImportError:
     from urllib.parse import urlparse
 
-
 _log = logging.getLogger(__name__)
 
 
 class Client(object):
-
     """
     Client for etcd, the distributed log service using raft.
     """
@@ -150,7 +149,7 @@ class Client(object):
         # SSL Client certificate support
 
         kw = {
-          'maxsize': per_host_pool_size
+            'maxsize': per_host_pool_size
         }
 
         if self._read_timeout > 0:
@@ -373,7 +372,7 @@ class Client(object):
                                 + '/stats/' + what, self._MGET).data.decode('utf-8')
         try:
             return json.loads(data)
-        except (TypeError,ValueError):
+        except (TypeError, ValueError):
             raise etcd.EtcdException("Cannot parse json data in the response")
 
     @property
@@ -400,7 +399,6 @@ class Client(object):
         if not key.startswith('/'):
             key = "/{}".format(key)
         return key
-
 
     def write(self, key, value, ttl=None, dir=False, append=False, **kwdargs):
         """
@@ -434,7 +432,7 @@ class Client(object):
 
         """
         _log.debug("Writing %s to key %s ttl=%s dir=%s append=%s",
-                  value, key, ttl, dir, append)
+                   value, key, ttl, dir, append)
         key = self._sanitize_key(key)
         params = {}
         if value is not None:
@@ -483,7 +481,7 @@ class Client(object):
             'dir': obj.dir,
             'ttl': obj.ttl,
             'prevExist': True
-            }
+        }
 
         if not obj.dir:
             # prevIndex on a dir causes a 'not a file' error. d'oh!
@@ -809,9 +807,9 @@ class Client(object):
                 except (urllib3.exceptions.HTTPError,
                         HTTPException, socket.error) as e:
                     if (isinstance(params, dict) and
-                        params.get("wait") == "true" and
-                        isinstance(e,
-                                   urllib3.exceptions.ReadTimeoutError)):
+                                params.get("wait") == "true" and
+                            isinstance(e,
+                                       urllib3.exceptions.ReadTimeoutError)):
                         _log.debug("Watch timed out.")
                         raise etcd.EtcdWatchTimedOut(
                             "Watch timed out: %r" % e,
@@ -850,6 +848,7 @@ class Client(object):
                         self._machines_cache = self.machines
                     self._machines_cache.remove(self._base_uri)
             return self._handle_server_response(response)
+
         return wrapper
 
     @_wrap_request
@@ -878,8 +877,8 @@ class Client(object):
                 headers=self._get_headers(),
                 preload_content=False)
         else:
-                    raise etcd.EtcdException(
-                        'HTTP method {} not supported'.format(method))
+            raise etcd.EtcdException(
+                'HTTP method {} not supported'.format(method))
 
     @_wrap_request
     def api_execute_json(self, path, method, params=None, timeout=None):
