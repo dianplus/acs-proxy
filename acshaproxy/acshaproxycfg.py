@@ -24,9 +24,9 @@ def run_haproxy(msg=None):
 class AcsHaproxy(Haproxy):
     """extend Haproxy"""
 
-    def __init__(self, link_mode="", msg=""):
-        super(AcsHaproxy, self).__init__(link_mode, msg)
-        self.specs = self._initialize(self.link_mode)
+    def __init__(self, running_mode="", msg=""):
+        super(AcsHaproxy, self).__init__(running_mode)
+        self.specs = self._initialize(self.running_mode)
 
     @staticmethod
     def _initialize(link_mode):
@@ -78,7 +78,7 @@ class AcsHaproxy(Haproxy):
         return links
 
     def _update_haproxy(self, cfg):
-        if self.link_mode in ["acs"]:
+        if self.running_mode in ["acs"]:
             if Haproxy.cls_cfg != cfg:
                 logger.info("HAProxy configuration:\n%s" % cfg)
                 Haproxy.cls_cfg = cfg
@@ -90,7 +90,7 @@ class AcsHaproxy(Haproxy):
             else:
                 logger.info("HAProxy configuration remains unchanged")
             logger.info("===========END===========")
-        elif self.link_mode in ["legacy"]:
+        elif self.running_mode in ["legacy"]:
             logger.info("HAProxy configuration:\n%s" % cfg)
             if save_to_file(config.HAPROXY_CONFIG_FILE, cfg):
                 UpdateHelper.run_once()
