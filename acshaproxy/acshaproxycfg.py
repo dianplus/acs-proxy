@@ -1,7 +1,7 @@
 import logging
 import os
 
-import haproxy.helper.new_link_helper as NewLinkHelper
+import haproxy.helper.compose_mode_link_helper as NewLinkHelper
 import haproxy.helper.update_helper as UpdateHelper
 from haproxy.haproxycfg import Haproxy
 from haproxy.parser.legacy_parser import LegacySpecs
