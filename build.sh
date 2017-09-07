@@ -14,7 +14,7 @@ trap cleanup  EXIT
 sed -i.bak "s/HEAD/$IMAGE_VERSION/g" ./acshaproxy/config.py
 
 docker build -t registry.cn-hangzhou.aliyuncs.com/acs-sample/proxy:$VERSION .
-docker tag registry.cn-hangzhou.aliyuncs.com/acs-sample/proxy:$VERSION registry.aliyuncs.com/acs-sample/proxy:$VERSION-$GIT_SHA
+docker tag registry.cn-hangzhou.aliyuncs.com/acs-sample/proxy:$VERSION registry.cn-hangzhou.aliyuncs.com/acs-sample/proxy:$VERSION-$GIT_SHA
 
 #docker push registry.cn-hangzhou.aliyuncs.com/acs-sample/proxy:$VERSION
 #docker push registry.cn-hangzhou.aliyuncs.com/acs-sample/proxy:$VERSION-$GIT_SHA
