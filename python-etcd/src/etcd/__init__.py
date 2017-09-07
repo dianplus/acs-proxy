@@ -1,5 +1,8 @@
 import logging
 
+from .client import Client
+from .lock import Lock
+
 _log = logging.getLogger(__name__)
 
 # Prevent "no handler" warnings to stderr in projects that do not configure
