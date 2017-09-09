@@ -3,6 +3,8 @@ FROM registry.cn-hangzhou.aliyuncs.com/acs-sample/haproxy:1.6.7
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/' /etc/apk/repositories
 COPY pip.conf /root/.pip/pip.conf
 
+ENV RELOAD_TIMEOUT 60
+
 COPY .  /acs-haproxy-src
 RUN  cd /acs-haproxy-src/python-etcd && pip install .
 RUN  cd /acs-haproxy-src && pip install .
