@@ -57,7 +57,6 @@ parser.add_option("-c", "--config-file",
 parser.add_option("-f", "--find-links",
                   help=("Specify a URL to search for buildout releases"))
 
-
 options, args = parser.parse_args()
 
 ######################################################################
@@ -76,14 +75,15 @@ except ImportError:
         from urllib2 import urlopen
 
     # XXX use a more permanent ez_setup.py URL when available.
-    exec(urlopen('https://bitbucket.org/pypa/setuptools/raw/0.7.2/ez_setup.py'
-                ).read(), ez)
+    exec (urlopen('https://bitbucket.org/pypa/setuptools/raw/0.7.2/ez_setup.py'
+                  ).read(), ez)
     setup_args = dict(to_dir=tmpeggs, download_delay=0)
     ez['use_setuptools'](**setup_args)
 
     if to_reload:
         reload(pkg_resources)
     import pkg_resources
+
     # This does not (always?) update the default working set.  We will
     # do it.
     for path in sys.path:
@@ -104,7 +104,7 @@ find_links = os.environ.get(
     options.find_links or
     ('http://downloads.buildout.org/'
      if options.accept_buildout_test_releases else None)
-    )
+)
 if find_links:
     cmd.extend(['-f', find_links])
 
@@ -116,13 +116,17 @@ version = options.version
 if version is None and not options.accept_buildout_test_releases:
     # Figure out the most recent final version of zc.buildout.
     import setuptools.package_index
+
     _final_parts = '*final-', '*final'
+
 
     def _final_version(parsed_version):
         for part in parsed_version:
             if (part[:1] == '*') and (part not in _final_parts):
                 return False
         return True
+
+
     index = setuptools.package_index.PackageIndex(
         search_path=[setuptools_path])
     if find_links:
@@ -147,6 +151,7 @@ if version:
 cmd.append(requirement)
 
 import subprocess
+
 if subprocess.call(cmd, env=dict(os.environ, PYTHONPATH=setuptools_path)) != 0:
     raise Exception(
         "Failed to execute command:\n%s",

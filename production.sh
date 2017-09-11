@@ -2,7 +2,7 @@
 
 set -e
 GIT_SHA=`git rev-parse --short HEAD || echo "HEAD"`
-VERSION=0.5
+VERSION=`cat ./acshaproxy/__init__.py | awk -F"\"" '{ print $2 }'`
 export IMAGE_VERSION=$VERSION-$GIT_SHA
 
 

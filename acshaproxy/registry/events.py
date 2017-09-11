@@ -1,6 +1,7 @@
-import etcd_info
 import logging
 import sys
+
+import etcd_info
 
 logger = logging.getLogger("haproxy")
 
@@ -25,5 +26,5 @@ class Events(object):
                     services_info_reg, _ = etcd_info.get_services_info(etcd_client)
                 except Exception:
                     logger.warn("Unexpected error: %s" % sys.exc_info()[0])
-                else: # find the etcd action and log it
+                else:  # find the etcd action and log it
                     self.message_handler(services_info_reg)

@@ -1,4 +1,5 @@
 import logging
+
 from .client import Client
 from .lock import Lock
 
@@ -73,7 +74,7 @@ class EtcdResult(object):
 
         """
         if not self._children:
-            #if the current result is a leaf, return itself
+            # if the current result is a leaf, return itself
             yield self
             return
         else:
@@ -116,10 +117,10 @@ class EtcdResult(object):
 
 
 class EtcdException(Exception):
-
     """
     Generic Etcd Exception.
     """
+
     def __init__(self, message=None, payload=None):
         super(EtcdException, self).__init__(message)
         self.payload = payload
@@ -194,6 +195,7 @@ class EtcdConnectionFailed(EtcdException):
     """
     Connection to etcd failed.
     """
+
     def __init__(self, message=None, payload=None, cause=None):
         super(EtcdConnectionFailed, self).__init__(message=message,
                                                    payload=payload)
@@ -240,6 +242,7 @@ class EtcdDirNotEmpty(EtcdValueError):
     Directory not empty.
     """
     pass
+
 
 class EtcdLockExpired(EtcdException):
     """
@@ -310,6 +313,7 @@ class EtcdError(object):
 # Blatantly copied from requests.
 try:
     from urllib3.contrib import pyopenssl
+
     pyopenssl.inject_into_urllib3()
 except ImportError:
     pass

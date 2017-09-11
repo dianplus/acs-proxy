@@ -1,10 +1,11 @@
+import os
+import sys
+
 from setuptools import setup, find_packages
-import sys, os
 
 here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.rst')).read()
 NEWS = open(os.path.join(here, 'NEWS.txt')).read()
-
 
 version = '0.4.3'
 
@@ -44,7 +45,7 @@ setup(
     url='http://github.com/jplana/python-etcd',
     license='MIT',
     packages=find_packages('src'),
-    package_dir = {'': 'src'},
+    package_dir={'': 'src'},
     include_package_data=True,
     zip_safe=False,
     install_requires=install_requires,
